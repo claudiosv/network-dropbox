@@ -4,7 +4,7 @@ CFLAGS=-c -Wall -g
 all: p1
 
 p1: server.o p1.o
-	$(CC) server.o p1.o -o p1
+	$(CC) server.o p1.o -o p1 -lpthread
 
 server.o: server.c
 	$(CC) $(CFLAGS) server.c

@@ -40,3 +40,10 @@ int accept_client( int server_socket_fd );
 char* find_entities(char* request);
 
 char* parse_print_entities(char* entities, char* entity_buffer);
+
+void* processing_thread(void* arg);
+
+struct thread_start_arg {    /* Used as argument to thread_start() */
+           char* request;        /* ID returned by pthread_create() */
+           int       client_socket_fd;       /* Application-defined thread # */
+       };

@@ -16,6 +16,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "server.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>        
+#include <sys/time.h>      
+#include <pthread.h>
+#include <time.h>
+#include <unistd.h>
+#include <string.h> 
 
 // ------------------------------------
 // Function prototype that creates a socket and
@@ -28,6 +36,8 @@
 //
 // Return:      Socket file descriptor (or -1 on failure)
 //
+
+
 
 int bind_port(unsigned int port_number)
 {
@@ -93,13 +103,61 @@ int accept_client(int server_socket_fd)
 
     client_socket_fd = accept(server_socket_fd, (struct sockaddr*)&client_address, &client_length);
 
+    // TODO: you add your implementation here
+    pthread_t processing_thread_t;
+    
+    //status variable
+    struct thread_start_arg *args = malloc(sizeof(struct thread_start_arg));
+    args->client_socket_fd = client_socket_fd;
+    args->request = request;
 
     if (client_socket_fd >= 0) {
-        int pid = fork();
-        if (pid == 0) {
-            //i'm the child :D
+        int pthread_status = pthread_create(&processing_thread_t, NULL, processing_thread, (void*) args);
+    }
+    else {
 
-            bzero(request, 512);
+        exit_status = FAIL;
+    }
+
+    if (DEBUG)
+        printf("Exit status = %d\n", exit_status);
+
+    return exit_status;
+
+} // end accept_client function
+
+char* find_entities(char* request)
+{
+    char* search_ptr = request;
+                    char* result_ptr = request;
+
+
+                    size_t str_len = strlen(request);
+                    unsigned long int i = 0;
+
+                    for (i = 0; i < str_len; i++) {
+
+                        if ((*search_ptr) == '?') {
+                            result_ptr = ++search_ptr;
+                        }
+                        else if ((*search_ptr) == ' ') {
+                            (*search_ptr) = '\0';
+                        }
+                        else {
+                            search_ptr++;
+                        }
+                    }
+                    return result_ptr;
+}
+
+void* processing_thread(void* arg)
+{
+    struct thread_start_arg *args = arg;
+    int client_socket_fd = args->client_socket_fd;
+
+    char* request = args->request;
+
+    bzero(request, 512);
 
             read(client_socket_fd, request, 511);
 
@@ -107,18 +165,27 @@ int accept_client(int server_socket_fd)
                 printf("Here is the http message:\n%s\n\n", request);
 
             char entity_body[4096];
+            char* upload_file = "/upload";
 
             if (strncmp(request, "GET ", 4) == 0) {
-                char* form_name = "/SimplePost.html";
-
-                unsigned int form_name_length = strlen(form_name);
                 char* url_offset = request + 4;
 
-                if (strncmp(url_offset, form_name, form_name_length) == 0) {
+                //routes
+                char* file_list = "/";
+                char* delete_file = "/delete/";
+                char* get_file = "/get/";
+                //use function pointers for more elegance
+                if (strncmp(url_offset, delete_file, strlen(delete_file)) == 0) {
+                    strcat(entity_body, "delete file!");
+                }
+                else if (strncmp(url_offset, get_file, strlen(get_file)) == 0) {
+                    strcat(entity_body, "get file!");
+                }else{
+                //if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
                     //This code is from the class c example 1
                     FILE* fhnd;
 
-                    fhnd = fopen("SimplePost.html", "r");
+                    fhnd = fopen("files.html", "r");
 
                     char line[50];
 
@@ -132,6 +199,7 @@ int accept_client(int server_socket_fd)
 
                     fclose(fhnd);
                 }
+                /*
                 else {
                     char entities[1024];
 
@@ -147,7 +215,7 @@ int accept_client(int server_socket_fd)
                     strcat(entity_body, table_content);
 
                     strcat(entity_body, "<table></body></html>");
-                }
+                }*/
             }
             else if (strncmp(request, "POST ", 5) == 0) {
                 char entities[1024];
@@ -198,7 +266,7 @@ int accept_client(int server_socket_fd)
                 write(client_socket_fd, response, strlen(response));
 
                 close(client_socket_fd);
-                return exit_status;
+                return;
             }
 
             char response[512];
@@ -210,50 +278,6 @@ int accept_client(int server_socket_fd)
             write(client_socket_fd, response, strlen(response));
 
             close(client_socket_fd);
-            exit(0);
-        }
-        else if (pid > 0) {
-            //we're the parent :)
-            
-        }
-        else {
-            //fork fail
-        }
-    }
-    else {
-
-        exit_status = FAIL;
-    }
-
-    if (DEBUG)
-        printf("Exit status = %d\n", exit_status);
-
-    return exit_status;
-
-} // end accept_client function
-
-char* find_entities(char* request)
-{
-    char* search_ptr = request;
-                    char* result_ptr = request;
-
-
-                    size_t str_len = strlen(request);
-                    unsigned long int i = 0;
-
-                    for (i = 0; i < str_len; i++) {
-
-                        if ((*search_ptr) == '?') {
-                            result_ptr = ++search_ptr;
-                        }
-                        else if ((*search_ptr) == ' ') {
-                            (*search_ptr) = '\0';
-                        }
-                        else {
-                            search_ptr++;
-                        }
-                    }
-                    return result_ptr;
 }
 
 char* parse_print_entities(char* entities, char* buff)
