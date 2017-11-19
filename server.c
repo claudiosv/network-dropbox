@@ -97,7 +97,7 @@ int accept_client(int server_socket_fd)
 
     struct sockaddr_in client_address;
 
-    char request[512];
+    char request[REQUEST_SIZE];
 
     client_length = sizeof(client_address);
 
@@ -157,12 +157,12 @@ void* processing_thread(void* arg)
 
     char* request = args->request;
 
-    bzero(request, 512);
+    bzero(request, REQUEST_SIZE);
 
-            read(client_socket_fd, request, 511);
+            read(client_socket_fd, request, REQUEST_SIZE-1);
 
             if (DEBUG)
-                printf("Here is the http message:\n%s\n\n", request);
+                printf("\nHere is the http message:\n%s\n\n", request);
 
             char entity_body[4096];
             char* upload_file = "/upload";
@@ -171,7 +171,7 @@ void* processing_thread(void* arg)
                 char* url_offset = request + 4;
 
                 //routes
-                char* file_list = "/";
+                char* file_list = "/ ";
                 char* delete_file = "/delete/";
                 char* get_file = "/get/";
                 //use function pointers for more elegance
@@ -180,8 +180,7 @@ void* processing_thread(void* arg)
                 }
                 else if (strncmp(url_offset, get_file, strlen(get_file)) == 0) {
                     strcat(entity_body, "get file!");
-                }else{
-                //if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
+                }else if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
                     //This code is from the class c example 1
                     FILE* fhnd;
 
@@ -199,14 +198,13 @@ void* processing_thread(void* arg)
 
                     fclose(fhnd);
                 }
-                /*
                 else {
                     char entities[1024];
 
-                    strcpy(entity_body, "<html><body><h1>GET Operation</h1><table cellpadding=5 cellspacing=5 border=1>");
+                    strcpy(entity_body, "Error 404");
                     
                     //parse get variables
-                    char* entities_ptr = find_entities(request);
+                    /*char* entities_ptr = find_entities(request);
                     strcpy(entities, entities_ptr);
 
                     char table_buffer[1024];
@@ -214,8 +212,8 @@ void* processing_thread(void* arg)
 
                     strcat(entity_body, table_content);
 
-                    strcat(entity_body, "<table></body></html>");
-                }*/
+                    strcat(entity_body, "<table></body></html>");*/
+                }
             }
             else if (strncmp(request, "POST ", 5) == 0) {
                 char entities[1024];
@@ -244,7 +242,7 @@ void* processing_thread(void* arg)
                 
 
 
-                char* entities_ptr = find_entities(found_ptr);
+                /*char* entities_ptr = find_entities(found_ptr);
 
                 strcpy(entities, entities_ptr);
                 char table_buffer[1024];
@@ -252,7 +250,18 @@ void* processing_thread(void* arg)
 
                     strcat(entity_body, table_content);
 
-                strcat(entity_body, "<table></body></html>");
+                strcat(entity_body, "<table></body></html>");*/
+                //printf("%s", found_ptr);
+
+                FILE * fp = fopen ("test.txt","w");
+                
+                
+                fprintf (fp, found_ptr);
+                
+
+                fclose (fp);
+ 
+   /* close the file*/  
             }
             else {
                 //error, http function not supported!
@@ -260,8 +269,8 @@ void* processing_thread(void* arg)
                 char response[512];
                 sprintf(response, "HTTP/1.1 501 Not Implemented\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(entity_body), entity_body);
 
-                if (DEBUG)
-                    printf("%s\n", response);
+                //if (DEBUG)
+                //    printf("%s\n", response);
 
                 write(client_socket_fd, response, strlen(response));
 
@@ -272,8 +281,8 @@ void* processing_thread(void* arg)
             char response[512];
             sprintf(response, "HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(entity_body), entity_body);
 
-            if (DEBUG)
-                printf("%s\n", response);
+            //if (DEBUG)
+            //    printf("%s\n", response);
 
             write(client_socket_fd, response, strlen(response));
 

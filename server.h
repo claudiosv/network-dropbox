@@ -9,6 +9,7 @@
 #define OK 0
 #define FAIL -1
 #define DEBUG 1
+#define REQUEST_SIZE 1048576
 
 // ------------------------------------
 // Function prototype that creates a socket and 
