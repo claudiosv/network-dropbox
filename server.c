@@ -24,6 +24,11 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h> 
+#include <dirent.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 // ------------------------------------
 // Function prototype that creates a socket and
@@ -157,6 +162,8 @@ void* processing_thread(void* arg)
 
     char* request = args->request;
 
+    char content_type[64] = "text/html";
+
     bzero(request, REQUEST_SIZE);
 
             read(client_socket_fd, request, REQUEST_SIZE-1);
@@ -164,7 +171,7 @@ void* processing_thread(void* arg)
             if (DEBUG)
                 printf("\nHere is the http message:\n%s\n\n", request);
 
-            char entity_body[4096];
+            char entity_body[REQUEST_SIZE];
             char* upload_file = "/upload";
 
             if (strncmp(request, "GET ", 4) == 0) {
@@ -176,17 +183,45 @@ void* processing_thread(void* arg)
                 char* get_file = "/get/";
                 //use function pointers for more elegance
                 if (strncmp(url_offset, delete_file, strlen(delete_file)) == 0) {
-                    strcat(entity_body, "delete file!");
+                    char* file_name_deletion = url_offset+strlen(delete_file);
+                    *(strstr(file_name_deletion, " ")) = '\0';
+                    
+                    if (remove(file_name_deletion) == 0)
+      strcat(entity_body, "Deleted successfully");
+   else
+      strcat(entity_body, "Unable to delete the file");
+      
                 }
                 else if (strncmp(url_offset, get_file, strlen(get_file)) == 0) {
-                    strcat(entity_body, "get file!");
+                    char* file_name_get = url_offset+strlen(get_file);
+                    *(strstr(file_name_get, " ")) = '\0';
+
+                    FILE *fptr;
+                
+                    
+                    /*  open the file for reading */
+                    fptr = fopen(file_name_get, "r");
+                    if (fptr == NULL)
+                    {
+                        printf("Cannot open file \n");
+                    }
+                    char chs[2];
+                    chs[1] = '\0';
+                    chs[0] = fgetc(fptr);
+                    while (chs[0] != EOF)
+                    {
+                        strcat (entity_body, chs);
+                        chs[0] = fgetc(fptr);
+                    }
+                    fclose(fptr);
+                    strcpy(content_type, "application/octet-stream");
                 }else if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
                     //This code is from the class c example 1
                     FILE* fhnd;
 
-                    fhnd = fopen("files.html", "r");
+                    fhnd = fopen("header.html", "r");
 
-                    char line[50];
+                    char line[500];
 
                     if (fhnd != NULL) {
 
@@ -197,6 +232,54 @@ void* processing_thread(void* arg)
                     }
 
                     fclose(fhnd);
+
+                    DIR *dir;
+                    struct dirent *ent;
+                    if ((dir = opendir (".")) != NULL) {
+                      /* print all the files and directories within directory */
+                      while ((ent = readdir (dir)) != NULL) {
+                        if (!(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0))
+                        {
+                            
+                        struct stat attrib;
+                        stat(ent->d_name, &attrib);
+                        char date[10];
+                        strftime(date, 20, "%d/%m/%y", localtime(&(attrib.st_ctime)));
+                        char filesize[10];
+                        readable_fs(attrib.st_size, filesize);
+
+                        char table_row_template[512] = "<tr>\n \
+      <td><a href=\"/get/%s\">%s</a> \
+      <a href=\"/delete/%s\" class=\"btn btn-danger float-right btn-sm\"> \
+      <span class=\"oi\" data-glyph=\"trash\"></span></a></td>\n \
+      <td>%s</td>\n \
+      <td>%s</td>\n \
+    </tr>\n";
+    char table_row[512];
+                        sprintf(table_row, table_row_template, ent->d_name, ent->d_name, ent->d_name, filesize, date);
+                        strcat(entity_body, table_row);
+                    }
+                      }
+                      closedir (dir);
+                    } else {
+                      /* could not open directory */
+                      
+                    }
+
+                    
+
+                    fhnd = fopen("footer.html", "r");
+
+                    if (fhnd != NULL) {
+
+                        while (fgets(line, sizeof(line), fhnd) != NULL) {
+
+                            strcat(entity_body, line);
+                        }
+                    }
+
+                    fclose(fhnd);
+
                 }
                 else {
                     char entities[1024];
@@ -279,7 +362,7 @@ void* processing_thread(void* arg)
             }
 
             char response[512];
-            sprintf(response, "HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(entity_body), entity_body);
+            sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", content_type, (int)strlen(entity_body), entity_body);
 
             //if (DEBUG)
             //    printf("%s\n", response);
@@ -320,4 +403,15 @@ char* parse_print_entities(char* entities, char* buff)
                     }
 
                     return buff;
+}
+
+char* readable_fs(double size/*in bytes*/, char *buf) {
+    int i = 0;
+    const char* units[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    while (size > 1024) {
+        size /= 1024;
+        i++;
+    }
+    sprintf(buf, "%.*f %s", i, size, units[i]);
+    return buf;
 }

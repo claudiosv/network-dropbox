@@ -48,3 +48,5 @@ struct thread_start_arg {    /* Used as argument to thread_start() */
            char* request;        /* ID returned by pthread_create() */
            int       client_socket_fd;       /* Application-defined thread # */
        };
+
+char* readable_fs(double size/*in bytes*/, char *buf);
