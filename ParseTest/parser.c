@@ -24,7 +24,7 @@ main( int argc, char *argv[] ) {
                     //This code is from the class c example 1
             FILE* fhnd;
 
-            fhnd = fopen("post.txt", "r");
+            fhnd = fopen("text.txt", "r");
 
             char line[50];
 
@@ -42,32 +42,63 @@ main( int argc, char *argv[] ) {
 
 
         //Beginning of Parse, Now that the file is read correctly
+	
+	//=============================================================================
+	//Parsing the boundary
 
-              
-        //I used a tokenizer to split the entity_body, then in the while loop
-        //I look for certain words and then cat them.           
-        char *tok = entity_body;
-        while((tok = strtok(tok,"")) != NULL)
-        {   
-                    
-                    
-                    
-                //printf("\n %s \n ",tok);
-                //printf("\n================================================\n");
-                char *finder;
-                finder = strstr(tok,"filename="); 
-                if(finder != NULL){
-                //printf("\n found a file name \n");
-                strcat(fileNames,finder);
-                 }
-                tok = NULL;
-        }
-        printf("\n Contents of fileNames: \n %s \n \n", fileNames);
-        //const char file_finder[100] = "\r\n\r\n";
-        //size_t length = strlen(entity_body);
+	
+ 	char* finder  = strstr(entity_body,"boundary");
+	char* p1 = finder;
+	char* p2 = finder+9;              
+	//printf("\n %s \n",finder);
 
-        //char * filename = strstr(entity_body,file_finder); 
-        //printf("the substring is : %s \n",filename);
+	for(;;){
+	if(*p1 == '\n'){
+	printf("\nFound the end of the line\n");
+	*p1 = '\0';
+	break;
+	}
+	p1++;
+	}
+	char bound[100];
+
+	strcpy(bound,p2); 
+	//printf("\n%s\n",bound);
+	*p1 = '-';
+
+
+
+	//============================================================================
+	//bound = seperator line
+	/**
+	char* token = strtok(entity_body,bound);
+
+	while(token!= NULL){
+	printf("%s\n",token);
+
+	token = strtok(NULL,bound);
+	}	
+	*/
+
+
+	printf("\n----------------------------------------------------------------------\n");
+
+  	char *delim = bound;
+	char* pp1 = entity_body;
+  	char *pp2;
+
+  	do {
+
+		 pp1 = strstr(pp1,"filename=");
+    		 pp2 = strstr(pp1,delim);
+    		 if (pp2){ 
+      		*pp2 = '\0';}
+
+    		printf("\n ============================================================= \n %s\n",pp1);
+
+    		pp1 = pp2+strlen(delim);
+
+  	}while(pp2!=NULL);
+
+
 }
-
-
