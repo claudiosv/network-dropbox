@@ -88,13 +88,35 @@ main( int argc, char *argv[] ) {
   	char *pp2;
 
   	do {
-
+		//Find filename
 		 pp1 = strstr(pp1,"filename=");
+		//Set pp2 equal to end of line
+		pp2 = pp1;
+		for(;;){
+			if(*pp2 == '\n'){
+			*pp2 = '\0';
+			break;
+			}
+		pp2++;
+		}
+		//Print the line
+		printf("\n ====================================================== \n%s",pp1);
+		//it Works, now to move the pp1 past content Type
+		pp1 = pp2+1;
+		//same thing as before but with pp1
+		for(;;){
+			if(*pp1 == '\n'){
+			pp1++;
+			break;
+			}
+			pp1++;
+		}
+
     		 pp2 = strstr(pp1,delim);
     		 if (pp2){ 
       		*pp2 = '\0';}
 
-    		printf("\n ============================================================= \n %s\n",pp1);
+    		printf("\n %s\n",pp1);
 
     		pp1 = pp2+strlen(delim);
 
