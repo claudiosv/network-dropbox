@@ -20,7 +20,7 @@ main( int argc, char *argv[] ) {
 	    //Reading the file and setting it equal to entity_body
             char fileNames[2000];
             char contents[4096];
-             char entity_body[200000];
+            char entity_body[200000];
         
             FILE* fhnd;
 
@@ -54,6 +54,7 @@ main( int argc, char *argv[] ) {
 	for(;;){
 	if(*findEnd == '\n'){
 	//printf("\nFound the end of the line\n");
+	findEnd--;
 	*findEnd = '\0';
 	break;
 	}
@@ -67,16 +68,14 @@ main( int argc, char *argv[] ) {
 	*/
 	char bound[200];
 	strcpy(bound,finder);
-	printf("\n Bound= \n%s\n",bound);
+	//printf("\n Bound= \n%s\n",bound);
 	
 	//Getting the null Terminator
 	char nullBound[30000]; 
 	strcpy(nullBound,finder);
 	//strcpy(nullBound,bound);
-	char dashes[10];
-	strcpy(dashes,"-------");
-	strcat(nullBound,dashes);
-	printf("\nnullBound =\n%s\n",nullBound);
+	strcat(nullBound,"--");
+	//printf("\n nullBound = %s\n",nullBound);
 
 	//Fuck it, I think basic strcat test
 	
@@ -85,7 +84,7 @@ main( int argc, char *argv[] ) {
 	strcpy(test1,"the dog walked");
 	strcpy(test2,"across the lake somehow");
 	strcat(test1,test2); 
-	printf("\n test1 = %s \n",test1);
+	//printf("\n test1 = %s \n",test1);
 	*findEnd = '\n';
 	//Now here goes nothing in getting the nullTerminator
 
@@ -102,9 +101,12 @@ main( int argc, char *argv[] ) {
 	char* pp1 = entity_body;
   	char *pp2;
 
-  	do {
+ 		for(;;){
 		//Find filename
 		 pp1 = strstr(pp1,"filename=");
+		if(pp1 == NULL){
+		break;
+		}
 		//Set pp2 equal to end of line
 		pp2 = pp1;
 		for(;;){
@@ -133,12 +135,14 @@ main( int argc, char *argv[] ) {
 		//This is where we get the contents of the file
 		//We set pp2 = to the next boundary, and set it as a null terminator
     		 pp2 = strstr(pp1,delim);
+
+		if(pp2 == NULL){
+		printf("\n\n What the fuck is happening \n\n");
+		}
+
     		 if (pp2){ 
 		pp2 = pp2 -2;
       		*pp2 = '\0';}
-		else{
-		break;
-		}
 		//Then its just a simple matter of printing pp1
 
     		printf("%s\n",pp1);
@@ -146,5 +150,5 @@ main( int argc, char *argv[] ) {
 		// + the length of the boundary
     		pp1 = pp2+strlen(delim);
 
-  	}while(pp2!=NULL);
+  	}
 }
