@@ -46,4 +46,72 @@ bill,clinton
 george,bush
 ronald,reagan
 jimmy,carter
+
+----------------------------19842382651513230451383118542
+Content-Disposition: form-data; name="file"; filename="sayno.txt"
+Content-Type: text/plain
+
+1   I have to floss my cat.
+   2   I've dedicated my life to linguini.
+   3   I want to spend more time with my blender.
+   4   the President said he might drop in.
+   5   the man on television told me to say tuned.
+   6   I've been scheduled for a karma transplant.
+   7   I'm staying home to work on my cottage cheese sculpture.
+   8   it's my parakeet's bowling night.
+   9   it wouldn't be fair to the other Beautiful People.
+  10   I'm building a pig from a kit.
+  11   I did my own thing and now I've got to undo it.
+  12   I'm enrolled in aerobic scream therapy.
+  13   there's a disturbance in the Force.
+  14   I'm doing door-to-door collecting for static cling.
+  15   I have to go to the post office to see if I'm still wanted.
+  16   I'm teaching my ferret to yodel.
+  17   I have to check the freshness dates on my dairy products.
+  18   I'm going through cherry cheesecake withdrawl.
+  19   I'm planning to go downtown to try on gloves.
+  20   my crayons all melted together.
+  21   I'm trying to see how long I can go without saying yes.
+  22   I'm in training to be a household pest.
+  23   I'm getting my overalls overhauled.
+
+----------------------------19842382651513230451383118542
+Content-Disposition: form-data; name="file"; filename="menAtUrinal.txt"
+Content-Type: text/plain
+
+1. Excitable - Shorts half twisted around, cannot find hole, rips shorts.
+ 2. Sociable - Joins friends in piss whether he has to or not.
+ 3. Crosseyed - Looks into the next urinal to see how the other guy is fixed.
+ 4. Timid - Cannot piss if someone is watching, flushes urinal, comes back 
+later.
+
+----------------------------19842382651513230451383118542
+Content-Disposition: form-data; name="file"; filename="signsOfInsanity.txt"
+Content-Type: text/plain
+
+1. Your friends tell you that you have been acting strange lately, and
+     then you hit them several times with a sledgehammer.
+ 2. Everyone you meet appears to have tentacles growing out of places that
+     you wouldn't expect tentacles to be growing from.
+ 3. You start out each morning with a 30-minute jog around the bathroom.
+ 4. You write to your mother in Germany every week, even though she sends
+     you mail from Iowa asking why you never write.
+ 5. Every time you see a street sign, you have a tremendous urge to 
+     relieve yourself on it.
+ 6. You wear your boxers on your head because you heard it will ward of
+     evil dandruff spirits.
+ 7. You're always having to apologize to your next door neighbor for
+     setting fire to his lawn decorations.
+ 8. Every commercial you hear on the radio reminds you of death.
+ 9. People stay away from you whenever they hear you howl.
+10. Your breath smells more and more like squirrel dung each passing day.
+11. You laugh out loud during funerals.
+12. When your doctor tells you to say ah, you yell out "RAPE! RAPE!"
+13. Nobody listens to you anymore, because they can't understand you
+      through that scuba mask.
+14. You begin to stop and consider all of the blades of grass you've
+      stepped on as a child, and worry that their ancestors are going 
+      to one day seek revenge.
+
+
 -----------------------------19842382651513230451383118542--
