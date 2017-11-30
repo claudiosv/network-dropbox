@@ -18,12 +18,12 @@
 #include "server.h"
 #include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>        
-#include <sys/time.h>      
+#include <stdlib.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
-#include <string.h> 
+#include <string.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -41,8 +41,6 @@
 //
 // Return:      Socket file descriptor (or -1 on failure)
 //
-
-
 
 int bind_port(unsigned int port_number)
 {
@@ -91,11 +89,8 @@ int bind_port(unsigned int port_number)
 // Return:      Termination status of client
 //              ( 0 = No Errors, -1 = Error )
 //
-int accept_client(int server_socket_fd)
+void accept_client(int server_socket_fd)
 {
-
-    int exit_status = OK;
-
     int client_socket_fd = -1;
 
     socklen_t client_length;
@@ -110,137 +105,132 @@ int accept_client(int server_socket_fd)
 
     // TODO: you add your implementation here
     pthread_t processing_thread_t;
-    
+
     //status variable
-    struct thread_start_arg *args = malloc(sizeof(struct thread_start_arg));
+    struct thread_start_arg* args = malloc(sizeof(struct thread_start_arg));
     args->client_socket_fd = client_socket_fd;
     args->request = request;
+    args->server_socket_fd = server_socket_fd;
 
     if (client_socket_fd >= 0) {
-        int pthread_status = pthread_create(&processing_thread_t, NULL, processing_thread, (void*) args);
+        int pthread_status = pthread_create(&processing_thread_t, NULL, processing_thread, (void*)args);
     }
     else {
 
-        exit_status = FAIL;
+        //big problem
     }
-
-    if (DEBUG)
-        printf("Exit status = %d\n", exit_status);
-
-    return exit_status;
 
 } // end accept_client function
 
 char* find_entities(char* request)
 {
     char* search_ptr = request;
-                    char* result_ptr = request;
+    char* result_ptr = request;
 
+    size_t str_len = strlen(request);
+    unsigned long int i = 0;
 
-                    size_t str_len = strlen(request);
-                    unsigned long int i = 0;
+    for (i = 0; i < str_len; i++) {
 
-                    for (i = 0; i < str_len; i++) {
-
-                        if ((*search_ptr) == '?') {
-                            result_ptr = ++search_ptr;
-                        }
-                        else if ((*search_ptr) == ' ') {
-                            (*search_ptr) = '\0';
-                        }
-                        else {
-                            search_ptr++;
-                        }
-                    }
-                    return result_ptr;
+        if ((*search_ptr) == '?') {
+            result_ptr = ++search_ptr;
+        }
+        else if ((*search_ptr) == ' ') {
+            (*search_ptr) = '\0';
+        }
+        else {
+            search_ptr++;
+        }
+    }
+    return result_ptr;
 }
 
 void* processing_thread(void* arg)
 {
-    struct thread_start_arg *args = arg;
-    int client_socket_fd = args->client_socket_fd;
 
+    struct thread_start_arg* args = arg;
+    int client_socket_fd = args->client_socket_fd;
+    //close( args->server_socket_fd );
     char* request = args->request;
 
     char content_type[64] = "text/html";
 
     bzero(request, REQUEST_SIZE);
 
-            read(client_socket_fd, request, REQUEST_SIZE-1);
+    read(client_socket_fd, request, REQUEST_SIZE - 1);
+    if (strlen(request) < 5) {
+        pthread_exit(NULL);
+        return NULL;
+    }
+    //if (DEBUG)
+     //   printf("\nHere is the http message:\n%s\n\n", request);
 
-            if (DEBUG)
-                printf("\nHere is the http message:\n%s\n\n", request);
+    char entity_body[REQUEST_SIZE];
+    char* upload_file = "/upload";
 
-            char entity_body[REQUEST_SIZE];
-            char* upload_file = "/upload";
+    if (strncmp(request, "GET ", 4) == 0) {
+        char* url_offset = request + 4;
 
-            if (strncmp(request, "GET ", 4) == 0) {
-                char* url_offset = request + 4;
+        //routes
+        char* file_list = "/ ";
+        char* delete_file = "/delete/";
+        char* get_file = "/get/";
+        //use function pointers for more elegance
+        if (strncmp(url_offset, delete_file, strlen(delete_file)) == 0) {
+            char* file_name_deletion = url_offset + strlen(delete_file);
+            *(strstr(file_name_deletion, " ")) = '\0';
 
-                //routes
-                char* file_list = "/ ";
-                char* delete_file = "/delete/";
-                char* get_file = "/get/";
-                //use function pointers for more elegance
-                if (strncmp(url_offset, delete_file, strlen(delete_file)) == 0) {
-                    char* file_name_deletion = url_offset+strlen(delete_file);
-                    *(strstr(file_name_deletion, " ")) = '\0';
-                    
-                    if (remove(file_name_deletion) == 0)
-      strcat(entity_body, "Deleted successfully");
-   else
-      strcat(entity_body, "Unable to delete the file");
-      
+            if (remove(file_name_deletion) == 0)
+                strcat(entity_body, "Deleted successfully");
+            else
+                strcat(entity_body, "Unable to delete the file");
+        }
+        else if (strncmp(url_offset, get_file, strlen(get_file)) == 0) {
+            char* file_name_get = url_offset + strlen(get_file);
+            *(strstr(file_name_get, " ")) = '\0';
+
+            FILE* fptr;
+
+            /*  open the file for reading */
+            fptr = fopen(file_name_get, "r");
+            if (fptr == NULL) {
+                printf("Cannot open file \n");
+            }
+            char chs[2];
+            chs[1] = '\0';
+            chs[0] = fgetc(fptr);
+            while (chs[0] != EOF) {
+                strcat(entity_body, chs);
+                chs[0] = fgetc(fptr);
+            }
+            fclose(fptr);
+            strcpy(content_type, "application/octet-stream");
+        }
+        else if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
+            //This code is from the class c example 1
+            FILE* fhnd;
+
+            fhnd = fopen("header.html", "r");
+
+            char line[500];
+
+            if (fhnd != NULL) {
+
+                while (fgets(line, sizeof(line), fhnd) != NULL) {
+
+                    strcat(entity_body, line);
                 }
-                else if (strncmp(url_offset, get_file, strlen(get_file)) == 0) {
-                    char* file_name_get = url_offset+strlen(get_file);
-                    *(strstr(file_name_get, " ")) = '\0';
+            }
 
-                    FILE *fptr;
-                
-                    
-                    /*  open the file for reading */
-                    fptr = fopen(file_name_get, "r");
-                    if (fptr == NULL)
-                    {
-                        printf("Cannot open file \n");
-                    }
-                    char chs[2];
-                    chs[1] = '\0';
-                    chs[0] = fgetc(fptr);
-                    while (chs[0] != EOF)
-                    {
-                        strcat (entity_body, chs);
-                        chs[0] = fgetc(fptr);
-                    }
-                    fclose(fptr);
-                    strcpy(content_type, "application/octet-stream");
-                }else if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
-                    //This code is from the class c example 1
-                    FILE* fhnd;
+            fclose(fhnd);
 
-                    fhnd = fopen("header.html", "r");
+            DIR* dir;
+            struct dirent* ent;
+            if ((dir = opendir(".")) != NULL) {
+                /* print all the files and directories within directory */
+                while ((ent = readdir(dir)) != NULL) {
+                    if (!(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)) {
 
-                    char line[500];
-
-                    if (fhnd != NULL) {
-
-                        while (fgets(line, sizeof(line), fhnd) != NULL) {
-
-                            strcat(entity_body, line);
-                        }
-                    }
-
-                    fclose(fhnd);
-
-                    DIR *dir;
-                    struct dirent *ent;
-                    if ((dir = opendir (".")) != NULL) {
-                      /* print all the files and directories within directory */
-                      while ((ent = readdir (dir)) != NULL) {
-                        if (!(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0))
-                        {
-                            
                         struct stat attrib;
                         stat(ent->d_name, &attrib);
                         char date[10];
@@ -255,159 +245,197 @@ void* processing_thread(void* arg)
       <td>%s</td>\n \
       <td>%s</td>\n \
     </tr>\n";
-    char table_row[512];
+                        char table_row[512];
                         sprintf(table_row, table_row_template, ent->d_name, ent->d_name, ent->d_name, filesize, date);
                         strcat(entity_body, table_row);
                     }
-                      }
-                      closedir (dir);
-                    } else {
-                      /* could not open directory */
-                      
-                    }
-
-                    
-
-                    fhnd = fopen("footer.html", "r");
-
-                    if (fhnd != NULL) {
-
-                        while (fgets(line, sizeof(line), fhnd) != NULL) {
-
-                            strcat(entity_body, line);
-                        }
-                    }
-
-                    fclose(fhnd);
-
                 }
-                else {
-                    char entities[1024];
-
-                    strcpy(entity_body, "Error 404");
-                    
-                    //parse get variables
-                    /*char* entities_ptr = find_entities(request);
-                    strcpy(entities, entities_ptr);
-
-                    char table_buffer[1024];
-                    char* table_content = parse_print_entities(entities, table_buffer);
-
-                    strcat(entity_body, table_content);
-
-                    strcat(entity_body, "<table></body></html>");*/
-                }
-            }
-            else if (strncmp(request, "POST ", 5) == 0) {
-                char entities[1024];
-                char* search_ptr;
-                char* found_ptr;
-
-                strcpy(entity_body, "<html><body><h1>POST Operation</h1><table cellpadding=5 cellspacing=5 border=1>");
-
-                size_t req_len = strlen(request);
-
-                search_ptr = request;
-
-                unsigned long int i = 0;
-
-                for (i = 0; i < req_len; i++) {
-
-                    if (strncmp(search_ptr, "\r\n\r\n ", 4) == 0) {
-                        search_ptr = search_ptr + 4;
-                        found_ptr = search_ptr;
-                    }
-                    else {
-                        search_ptr++;
-                    }
-                }
-
-                
-
-
-                /*char* entities_ptr = find_entities(found_ptr);
-
-                strcpy(entities, entities_ptr);
-                char table_buffer[1024];
-                    char* table_content = parse_print_entities(entities, table_buffer);
-
-                    strcat(entity_body, table_content);
-
-                strcat(entity_body, "<table></body></html>");*/
-                //printf("%s", found_ptr);
-
-                FILE * fp = fopen ("test.txt","w");
-                
-                
-                fprintf (fp, found_ptr);
-                
-
-                fclose (fp);
- 
-   /* close the file*/  
+                closedir(dir);
             }
             else {
-                //error, http function not supported!
-                strcpy(entity_body, "Only GET and POST operations are supported on this webserver.");
-                char response[512];
-                sprintf(response, "HTTP/1.1 501 Not Implemented\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(entity_body), entity_body);
-
-                //if (DEBUG)
-                //    printf("%s\n", response);
-
-                write(client_socket_fd, response, strlen(response));
-
-                close(client_socket_fd);
-                return;
+                /* could not open directory */
             }
 
-            char response[512];
-            sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", content_type, (int)strlen(entity_body), entity_body);
+            fhnd = fopen("footer.html", "r");
 
-            //if (DEBUG)
-            //    printf("%s\n", response);
+            if (fhnd != NULL) {
 
-            write(client_socket_fd, response, strlen(response));
+                while (fgets(line, sizeof(line), fhnd) != NULL) {
 
-            close(client_socket_fd);
+                    strcat(entity_body, line);
+                }
+            }
+
+            fclose(fhnd);
+        }
+        else {
+            char entities[1024];
+
+            strcpy(entity_body, "Error 404");
+        }
+    }
+    else if (strncmp(request, "POST ", 5) == 0) {
+
+        //reques
+        char* url_offset = request + 5;
+        char* upload_file = "/upload";
+        //use function pointers for more elegance
+        if (strncmp(url_offset, upload_file, strlen(upload_file)) == 0) {
+
+            char* finder = strstr(request, "boundary=");
+            char* findEnd = finder;
+
+            for (;;) {
+                if (*findEnd == '\n') {
+                    findEnd--;
+                    *findEnd = '\0';
+                    break;
+                }
+                findEnd++;
+            }
+            finder = finder + 9;
+
+            char bound[200];
+            strcpy(bound, finder);
+
+            *findEnd = '\n';
+
+            //============================================================================
+            //Beginning of main parser, It uses two pointers (start_str, and end_str) to print and display
+            //what we want to see. It uses strstr to find the file, sets the end of the link equal
+            //a null terminator and then moves the first pointer down a little to get rid of things
+            //like "filename=, and stuff like that". Its not very complex, but it also requires a lot
+            //of pen and paper to visualize.
+
+            //printf("\n----------------------------------------------------------------------\n");
+
+            char* delim = bound;
+            char* start_str = request;
+            char* end_str;
+
+            for (;;) {
+                //Find filename
+                start_str = strstr(start_str, "filename=");
+                if (start_str == NULL) {
+                    break;
+                }
+                //Set pp2 equal to end of line
+                end_str = start_str;
+                for (;;) {
+                    if (*end_str == '\n') {
+                        end_str = end_str - 2;
+                        *end_str = '\0';
+                        break;
+                    }
+                    end_str++;
+                }
+                //Get rid of filename= (9 characters)
+                start_str = start_str + 10;
+
+                //Print the line
+                printf("%s\n", start_str);
+                FILE* fp = fopen(start_str, "w");
+
+                
+                //it Works, now to move the pp1 past content Type
+                start_str = end_str + 4;
+                //Basically this is a glorified, skip a line procedure
+                for (;;) {
+                    if (*start_str == '\n') {
+                        start_str++;
+                        break;
+                    }
+                    start_str++;
+                }
+                start_str += 2;
+                //This is where we get the contents of the file
+                //We set pp2 = to the next boundary, and set it as a null terminator
+                end_str = strstr(start_str, delim);
+
+                if (end_str) {
+                    end_str = end_str - 4;
+                    *end_str = '\0';
+                }
+                //Then its just a simple matter of printing pp1
+
+                printf("%s\n", start_str);
+                fputs(start_str, fp);
+                fclose(fp);
+                //This was the tricky part,you set pp1 after the '\0' by making it equals to pp1
+                // + the length of the boundary
+                start_str = end_str + strlen(delim);
+            }
+
+            
+        }
+
+        /* close the file*/
+    }
+    else {
+        //error, http function not supported!
+        strcpy(entity_body, "Only GET and POST operations are supported on this webserver.");
+        char response[512];
+        sprintf(response, "HTTP/1.1 501 Not Implemented\r\nContent-Length: %d\r\n\r\n%s", (int)strlen(entity_body), entity_body);
+
+        //if (DEBUG)
+        //    printf("%s\n", response);
+
+        write(client_socket_fd, response, strlen(response));
+
+        close(client_socket_fd);
+        pthread_exit(NULL);
+    }
+
+    char response[512];
+    sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s", content_type, (int)strlen(entity_body), entity_body);
+
+    //if (DEBUG)
+    //    printf("%s\n", response);
+
+    write(client_socket_fd, response, strlen(response));
+
+    close(client_socket_fd);
+    pthread_exit(NULL);
+    return NULL;
 }
 
 char* parse_print_entities(char* entities, char* buff)
 {
     size_t entity_length = strlen(entities);
     unsigned int j = 0;
-                    char* entity_start = entities;
-                    char* entity_end = entities;
-                    char entity_buffer[1024];
-                    
-                    for (j = 0; j <= entity_length; j++) {
-                        if ((*entity_end) == '=') {
-                            (*entity_end) = '\0';
-                            sprintf(entity_buffer, "<tr><td><b>%s</b></td>", entity_start);
-                            entity_start = ++entity_end;
-                            strcat(buff, entity_buffer);
-                        }
-                        else if ((*entity_end) == '&') {
-                            (*entity_end) = '\0';
-                            sprintf(entity_buffer, "<td>%s</td></tr>\n", entity_start);
-                            entity_start = ++entity_end;
-                            strcat(buff, entity_buffer);
-                        }
-                        else if ((*entity_end) == ' ' || (*entity_end) == '\0') {
-                            sprintf(entity_buffer, "<td>%s</td></tr>\n", entity_start);
-                            strcat(buff, entity_buffer);
-                        }
-                        else {
-                            entity_end++;
-                        }
-                    }
+    char* entity_start = entities;
+    char* entity_end = entities;
+    char entity_buffer[1024];
 
-                    return buff;
+    for (j = 0; j <= entity_length; j++) {
+        if ((*entity_end) == '=') {
+            (*entity_end) = '\0';
+            sprintf(entity_buffer, "<tr><td><b>%s</b></td>", entity_start);
+            entity_start = ++entity_end;
+            strcat(buff, entity_buffer);
+        }
+        else if ((*entity_end) == '&') {
+            (*entity_end) = '\0';
+            sprintf(entity_buffer, "<td>%s</td></tr>\n", entity_start);
+            entity_start = ++entity_end;
+            strcat(buff, entity_buffer);
+        }
+        else if ((*entity_end) == ' ' || (*entity_end) == '\0') {
+            sprintf(entity_buffer, "<td>%s</td></tr>\n", entity_start);
+            strcat(buff, entity_buffer);
+        }
+        else {
+            entity_end++;
+        }
+    }
+
+    return buff;
 }
 
-char* readable_fs(double size/*in bytes*/, char *buf) {
+char* readable_fs(double size /*in bytes*/, char* buf)
+{
     int i = 0;
-    const char* units[] = {"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    const char* units[] = { "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
     while (size > 1024) {
         size /= 1024;
         i++;
