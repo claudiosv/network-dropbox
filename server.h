@@ -36,7 +36,7 @@ int bind_port( unsigned int port_number );
 //				( 0 = No Errors, -1 = Error )
 //
 
-int accept_client( int server_socket_fd );
+void accept_client( int server_socket_fd );
 
 char* find_entities(char* request);
 
@@ -47,6 +47,7 @@ void* processing_thread(void* arg);
 struct thread_start_arg {    /* Used as argument to thread_start() */
            char* request;        /* ID returned by pthread_create() */
            int       client_socket_fd;       /* Application-defined thread # */
+			int server_socket_fd;
        };
 
 char* readable_fs(double size/*in bytes*/, char *buf);

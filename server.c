@@ -189,21 +189,23 @@ void* processing_thread(void* arg)
             char* file_name_get = url_offset + strlen(get_file);
             *(strstr(file_name_get, " ")) = '\0';
 
-            FILE* fptr;
+            FILE* fp;
 
             /*  open the file for reading */
-            fptr = fopen(file_name_get, "r");
-            if (fptr == NULL) {
-                printf("Cannot open file \n");
+            char source[10000000];
+            fp = fopen(file_name_get, "r");
+
+            if (fp != NULL) {
+                size_t newLen = fread(source, sizeof(char), 10000000, fp);
+                if ( ferror( fp ) != 0 ) {
+                    fputs("Error reading file", stderr);
+                } else {
+                    source[newLen++] = '\0'; /* Just to be safe. */
+                }
+            
+                fclose(fp);
             }
-            char chs[2];
-            chs[1] = '\0';
-            chs[0] = fgetc(fptr);
-            while (chs[0] != EOF) {
-                strcat(entity_body, chs);
-                chs[0] = fgetc(fptr);
-            }
-            fclose(fptr);
+            strcat(entity_body, source);
             strcpy(content_type, "application/octet-stream");
         }
         else if (strncmp(url_offset, file_list, strlen(file_list)) == 0) {
