@@ -45,15 +45,12 @@ main( int argc, char *argv[] ) {
 	
 	//=============================================================================
 	//Parsing the boundary
-	//printf("\nHere is the HTTP Message \n%s\n",entity_body);
 	
  	char* finder  = strstr(entity_body,"boundary=");
 	char* findEnd = finder;
-	//printf("\n %s \n",finder);
 
 	for(;;){
 	if(*findEnd == '\n'){
-	//printf("\nFound the end of the line\n");
 	findEnd--;
 	*findEnd = '\0';
 	break;
@@ -62,34 +59,18 @@ main( int argc, char *argv[] ) {
 	}
 	finder = finder+9;
 
-	/**
-	size_t delimLen = strlen(finder);
-	char * bound = malloc(delimLen *4);
-	*/
 	char bound[200];
 	strcpy(bound,finder);
-	//printf("\n Bound= \n%s\n",bound);
 	
 	//Getting the null Terminator
 	char nullBound[30000]; 
 	strcpy(nullBound,finder);
-	//strcpy(nullBound,bound);
 	strcat(nullBound,"--");
-	//printf("\n nullBound = %s\n",nullBound);
 
-	//Fuck it, I think basic strcat test
-	
-	char test1[100];
-	char test2[100];
-	strcpy(test1,"the dog walked");
-	strcpy(test2,"across the lake somehow");
-	strcat(test1,test2); 
-	//printf("\n test1 = %s \n",test1);
 	*findEnd = '\n';
-	//Now here goes nothing in getting the nullTerminator
 
 	//============================================================================
-	//Beginning of main parser, It uses two pointers (pp1, and pp2) to print and display
+	//Beginning of main parser, It uses two pointers (start_str, and end_str) to print and display
 	//what we want to see. It uses strstr to find the file, sets the end of the link equal 
 	//a null terminator and then moves the first pointer down a little to get rid of things
 	//like "filename=, and stuff like that". Its not very complex, but it also requires a lot
@@ -98,57 +79,53 @@ main( int argc, char *argv[] ) {
 	//printf("\n----------------------------------------------------------------------\n");
 
   	char *delim = bound;
-	char* pp1 = entity_body;
-  	char *pp2;
+	char* start_str = entity_body;
+  	char *end_str;
 
  		for(;;){
 		//Find filename
-		 pp1 = strstr(pp1,"filename=");
-		if(pp1 == NULL){
+		 start_str = strstr(start_str,"filename=");
+		if(start_str == NULL){
 		break;
 		}
 		//Set pp2 equal to end of line
-		pp2 = pp1;
+		end_str = start_str;
 		for(;;){
-			if(*pp2 == '\n'){
-			pp2 = pp2 -2;
-			*pp2 = '\0';
+			if(*end_str == '\n'){
+			end_str = end_str -2;
+			*end_str= '\0';
 			break;
 			}
-		pp2++;
+		end_str++;
 		}
 		//Get rid of filename= (9 characters)
-		pp1 = pp1 + 10;
+		 start_str= start_str + 10;
 	
 		//Print the line
-		printf("\n ====================================================== \n%s\n",pp1);
+		printf("\n ====================================================== \n%s\n",start_str);
 		//it Works, now to move the pp1 past content Type
-		pp1 = pp2+4;
+		start_str = end_str+4;
 		//Basically this is a glorified, skip a line procedure 
 		for(;;){
-			if(*pp1 == '\n'){
-			pp1++;
+			if(*start_str == '\n'){
+			start_str++;
 			break;
 			}
-			pp1++;
+			start_str++;
 		}
 		//This is where we get the contents of the file
 		//We set pp2 = to the next boundary, and set it as a null terminator
-    		 pp2 = strstr(pp1,delim);
+    		 end_str = strstr(start_str,delim);
 
-		if(pp2 == NULL){
-		printf("\n\n What the fuck is happening \n\n");
-		}
-
-    		 if (pp2){ 
-		pp2 = pp2 -2;
-      		*pp2 = '\0';}
+    		 if (end_str){ 
+		end_str = end_str -2;
+      		*end_str = '\0';}
 		//Then its just a simple matter of printing pp1
 
-    		printf("%s\n",pp1);
+    		printf("%s\n",start_str);
 		//This was the tricky part,you set pp1 after the '\0' by making it equals to pp1
 		// + the length of the boundary
-    		pp1 = pp2+strlen(delim);
+    		 start_str = end_str + strlen(delim);
 
   	}
 }
