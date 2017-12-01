@@ -411,6 +411,8 @@ void* processing_thread(void* arg)
     return NULL;
 }
 
+//Imported from: http://programanddesign.com/cpp/human-readable-file-size-in-c/
+//Copyright Mark Bayazit
 char* readable_fs(double size /*in bytes*/, char* buf)
 {
     int i = 0;
