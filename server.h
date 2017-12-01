@@ -38,10 +38,6 @@ int bind_port( unsigned int port_number );
 
 void accept_client( int server_socket_fd );
 
-char* find_entities(char* request);
-
-char* parse_print_entities(char* entities, char* entity_buffer);
-
 void* processing_thread(void* arg);
 
 struct thread_start_arg {    /* Used as argument to thread_start() */

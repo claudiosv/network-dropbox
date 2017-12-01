@@ -230,7 +230,15 @@ void* processing_thread(void* arg)
             if ((dir = opendir(".")) != NULL) {
                 /* print all the files and directories within directory */
                 while ((ent = readdir(dir)) != NULL) {
-                    if (!(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)) {
+                    if (!
+                        (strcmp(ent->d_name, ".") == 0 ||
+                         strcmp(ent->d_name, "..") == 0 ||
+                          strcmp(ent->d_name, "p1") == 0 ||
+                          strcmp(ent->d_name, "header.html") == 0 ||
+                          strcmp(ent->d_name, "footer.html") == 0 ||
+                          strcmp(ent->d_name, "files.html") == 0)
+
+                        ) {
 
                         struct stat attrib;
                         stat(ent->d_name, &attrib);
@@ -334,6 +342,9 @@ void* processing_thread(void* arg)
                 start_str = start_str + 10;
 
                 //Print the line
+                char success_message[100];
+                sprintf(success_message, "File %s uploaded successfully!<br>\n", start_str);
+                strcat(entity_body, success_message);
                 printf("%s\n", start_str);
                 FILE* fp = fopen(start_str, "w");
 
@@ -398,39 +409,6 @@ void* processing_thread(void* arg)
     close(client_socket_fd);
     pthread_exit(NULL);
     return NULL;
-}
-
-char* parse_print_entities(char* entities, char* buff)
-{
-    size_t entity_length = strlen(entities);
-    unsigned int j = 0;
-    char* entity_start = entities;
-    char* entity_end = entities;
-    char entity_buffer[1024];
-
-    for (j = 0; j <= entity_length; j++) {
-        if ((*entity_end) == '=') {
-            (*entity_end) = '\0';
-            sprintf(entity_buffer, "<tr><td><b>%s</b></td>", entity_start);
-            entity_start = ++entity_end;
-            strcat(buff, entity_buffer);
-        }
-        else if ((*entity_end) == '&') {
-            (*entity_end) = '\0';
-            sprintf(entity_buffer, "<td>%s</td></tr>\n", entity_start);
-            entity_start = ++entity_end;
-            strcat(buff, entity_buffer);
-        }
-        else if ((*entity_end) == ' ' || (*entity_end) == '\0') {
-            sprintf(entity_buffer, "<td>%s</td></tr>\n", entity_start);
-            strcat(buff, entity_buffer);
-        }
-        else {
-            entity_end++;
-        }
-    }
-
-    return buff;
 }
 
 char* readable_fs(double size /*in bytes*/, char* buf)
