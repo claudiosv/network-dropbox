@@ -20,4 +20,3 @@ run:
 
 tarball:
 	tar -cvzf spiess.tar.gz *
-

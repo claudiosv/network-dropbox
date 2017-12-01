@@ -188,22 +188,21 @@ void* processing_thread(void* arg)
         else if (strncmp(url_offset, get_file, strlen(get_file)) == 0) {
             char* file_name_get = url_offset + strlen(get_file);
             *(strstr(file_name_get, " ")) = '\0';
+            
+            FILE* fp_ptr;
 
-            FILE* fp;
-
-            /*  open the file for reading */
-            char source[10000000];
-            fp = fopen(file_name_get, "r");
-
-            if (fp != NULL) {
-                size_t newLen = fread(source, sizeof(char), 10000000, fp);
-                if ( ferror( fp ) != 0 ) {
+            char source[REQUEST_SIZE];
+            fp_ptr = fopen(file_name_get, "r");
+            //fclose(fp_ptr);
+            if (fp_ptr != NULL) {
+                size_t newLen = fread(source, sizeof(char), REQUEST_SIZE, fp_ptr);
+                if ( ferror( fp_ptr ) != 0 ) {
                     fputs("Error reading file", stderr);
                 } else {
-                    source[newLen++] = '\0'; /* Just to be safe. */
+                    source[newLen++] = '\0';
                 }
             
-                fclose(fp);
+                fclose(fp_ptr);
             }
             strcat(entity_body, source);
             strcpy(content_type, "application/octet-stream");

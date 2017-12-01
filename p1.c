@@ -15,7 +15,6 @@ static int server_socket_fd = 0;
 
 // -------------------------------------------------
 // Function prototypes
-static void sig_child_handler( int sig );
 static void sig_int_handler( int sig );
 
 /*
@@ -37,12 +36,6 @@ int main( int argc, char *argv[] ) {
 	if ( signal( SIGINT, sig_int_handler ) == SIG_ERR ) {
 
 		perror( "Unable to create signal interupt handler!");
-		exit( FAIL );
-	}
-
-	if ( signal( SIGCHLD, sig_child_handler ) == SIG_ERR ) {
-
-		perror( "Unable to create signal child handler!");
 		exit( FAIL );
 	}
 
@@ -95,17 +88,3 @@ static void sig_int_handler( int sig ) {
 	exit( OK );
 
 } // end sig_int_handler function
-
-static void sig_child_handler( int sig ) {
-
-	// -------------------------------------
-	// TODO:
-	// -------------------------------------
-	// You complete child signal handler code to remove child process from process 
-	// table (i.e. reap the child)
-	// -------------------------------------
-	pid_t cpid = wait(NULL);
-	//waitpid(-1, status,0)
-	
-
-} // end sig_child_handler function
