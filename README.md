@@ -3,8 +3,6 @@
 
 A small HTTP web server in C that offers a web interface for uploading & managing files on a network location.
 
-![Demo](https://media.giphy.com/media/xThta5C2cb4y2dMdOw/giphy.gif)
-
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. This project is not ready for live deployment yet for security reasons.
